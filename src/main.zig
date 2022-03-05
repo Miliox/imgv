@@ -56,7 +56,7 @@ pub fn main() anyerror!void {
     const texture = sdl.SDL_CreateTextureFromSurface(renderer, image);
     defer sdl.SDL_DestroyTexture(texture);
 
-    var rendered: bool = false;
+    var redraw: bool = true;
 
     // loop until window is close
     mainloop: while (true) {
@@ -68,10 +68,10 @@ pub fn main() anyerror!void {
             }
         }
 
-        if (!rendered) {
+        if (redraw) {
             _ = sdl.SDL_RenderCopy(renderer, texture, null, null);
             _ = sdl.SDL_RenderPresent(renderer);
-            rendered = false;
+            redraw = false;
         }
 
         sdl.SDL_Delay(@divTrunc(1000, 60));
