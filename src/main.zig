@@ -42,8 +42,8 @@ pub fn main() anyerror!void {
 
     const window = sdl.SDL_CreateWindow(
         "Image Viewer",
-        sdl.SDL_WINDOWPOS_UNDEFINED,
-        sdl.SDL_WINDOWPOS_UNDEFINED,
+        sdl.SDL_WINDOWPOS_CENTERED,
+        sdl.SDL_WINDOWPOS_CENTERED,
         image.*.w,
         image.*.h,
         sdl.SDL_WINDOW_RESIZABLE);
