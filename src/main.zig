@@ -49,7 +49,8 @@ pub fn main() anyerror!void {
         sdl.SDL_WINDOW_RESIZABLE);
     defer sdl.SDL_DestroyWindow(window);
 
-    const renderer = sdl.SDL_CreateRenderer(window, -1, 0);
+    const renderer_flags = sdl.SDL_RENDERER_ACCELERATED | sdl.SDL_RENDERER_PRESENTVSYNC;
+    const renderer = sdl.SDL_CreateRenderer(window, -1, renderer_flags);
     defer sdl.SDL_DestroyRenderer(renderer);
 
     const texture = sdl.SDL_CreateTextureFromSurface(renderer, image);
