@@ -14,6 +14,11 @@ pub fn build(b: *std.build.Builder) void {
     const exe = b.addExecutable("imgv", "src/main.zig");
     exe.setTarget(target);
     exe.setBuildMode(mode);
+    exe.addIncludeDir("/usr/local/include/SDL2");
+    exe.addLibPath("/usr/local/lib");
+    exe.linkSystemLibrary("sdl2");
+    exe.linkSystemLibrary("sdl2_image");
+    exe.linkLibC();
     exe.install();
 
     const run_cmd = exe.run();
