@@ -46,7 +46,7 @@ pub fn main() anyerror!void {
         sdl.SDL_WINDOWPOS_UNDEFINED,
         image.*.w,
         image.*.h,
-        0);
+        sdl.SDL_WINDOW_RESIZABLE);
     defer sdl.SDL_DestroyWindow(window);
 
     const renderer = sdl.SDL_CreateRenderer(window, -1, 0);
