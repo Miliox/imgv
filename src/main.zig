@@ -4,6 +4,38 @@ const sdl = @cImport({
     @cInclude("SDL_image.h");
 });
 
+const assert = std.debug.assert;
+
+fn fit_in_rect(window_width: i32, window_height: i32, image_width: i32, image_height: i32) sdl.SDL_Rect {
+    const window_width_as_float = @intToFloat(f64, window_width);
+    const window_height_as_float = @intToFloat(f64, window_height);
+    const window_aspect_ratio = window_width_as_float / window_height_as_float;
+
+    const image_width_as_float = @intToFloat(f64, image_width);
+    const image_height_as_float = @intToFloat(f64, image_height);
+    const image_aspect_ratio = image_width_as_float / image_height_as_float;
+
+    const width_ratio = window_width_as_float / image_width_as_float;
+    const height_ratio = window_height_as_float / image_height_as_float;
+
+    const rect_width = if (window_aspect_ratio >= image_aspect_ratio)
+        @floatToInt(i32, window_width_as_float * height_ratio)
+    else
+        window_width;
+
+    const rect_heigth = if (window_aspect_ratio >= image_aspect_ratio)
+        window_height
+    else
+        @floatToInt(i32, image_height_as_float * width_ratio);
+
+    return sdl.SDL_Rect{
+        .x = @divTrunc((window_width  - rect_width), 2),
+        .y = @divTrunc((window_height - rect_heigth), 2),
+        .w = rect_width,
+        .h = rect_heigth,
+    };
+}
+
 pub fn main() anyerror!void {
     var arena_instance = std.heap.ArenaAllocator.init(std.heap.c_allocator);
     defer arena_instance.deinit();
@@ -64,13 +96,31 @@ pub fn main() anyerror!void {
         while (sdl.SDL_PollEvent(&event) != 0) {
             switch (event.type) {
                 sdl.SDL_QUIT => break :mainloop,
+                sdl.SDL_WINDOWEVENT => {
+                    switch (event.window.event) {
+                        sdl.SDL_WINDOWEVENT_RESIZED => {
+                            redraw = true;
+                        },
+                        sdl.SDL_WINDOWEVENT_SIZE_CHANGED => {
+                            redraw = true;
+                        },
+                        else => {},
+                    }
+                },
                 else => {},
             }
         }
 
         if (redraw) {
-            _ = sdl.SDL_RenderCopy(renderer, texture, null, null);
-            _ = sdl.SDL_RenderPresent(renderer);
+            var window_width: c_int = 0;
+            var window_height: c_int = 0;
+            sdl.SDL_GetWindowSize(window, &window_width, &window_height);
+
+            const dst_rect = fit_in_rect(window_width, window_height, image.*.w, image.*.h);
+
+            assert(0 == sdl.SDL_RenderClear(renderer));
+            assert(0 == sdl.SDL_RenderCopy(renderer, texture, null, &dst_rect));
+            sdl.SDL_RenderPresent(renderer);
             redraw = false;
         }
 
