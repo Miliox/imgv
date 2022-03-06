@@ -120,10 +120,9 @@ pub fn main() anyerror!void {
                 sdl.SDL_QUIT => break :mainloop,
                 sdl.SDL_WINDOWEVENT => {
                     switch (event.window.event) {
-                        sdl.SDL_WINDOWEVENT_RESIZED => {
-                            redraw = true;
-                        },
-                        sdl.SDL_WINDOWEVENT_SIZE_CHANGED => {
+                        sdl.SDL_WINDOWEVENT_RESIZED,
+                        sdl.SDL_WINDOWEVENT_SIZE_CHANGED,
+                        sdl.SDL_WINDOWEVENT_EXPOSED => {
                             redraw = true;
                         },
                         else => {},
