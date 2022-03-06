@@ -81,6 +81,8 @@ pub fn main() anyerror!void {
         sdl.SDL_WINDOW_RESIZABLE);
     defer sdl.SDL_DestroyWindow(window);
 
+    assert(1 == sdl.SDL_SetHint(sdl.SDL_HINT_RENDER_SCALE_QUALITY, "best"));
+
     const renderer_flags = sdl.SDL_RENDERER_ACCELERATED | sdl.SDL_RENDERER_PRESENTVSYNC;
     const renderer = sdl.SDL_CreateRenderer(window, -1, renderer_flags);
     defer sdl.SDL_DestroyRenderer(renderer);
