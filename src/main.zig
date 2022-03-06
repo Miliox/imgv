@@ -91,13 +91,20 @@ pub fn main() anyerror!void {
     }
     defer sdl.SDL_FreeSurface(image);
 
+    const last_directory_separator_in_path: ?usize = std.mem.lastIndexOf(u8, args[1], "/");
+
+    const filename: [:0]u8 = if (last_directory_separator_in_path != null)
+        args[1][(last_directory_separator_in_path.? + 1)..]
+    else
+        args[1];
+
     // other configurations
     assert(1 == sdl.SDL_SetHint(sdl.SDL_HINT_RENDER_SCALE_QUALITY, "best"));
     assert(1 == sdl.SDL_SetHint(sdl.SDL_HINT_RENDER_VSYNC, "1"));
     assert(1 == sdl.SDL_SetHint(sdl.SDL_HINT_VIDEO_ALLOW_SCREENSAVER, "1"));
 
     const window = sdl.SDL_CreateWindow(
-        "Image Viewer",
+        filename,
         sdl.SDL_WINDOWPOS_CENTERED,
         sdl.SDL_WINDOWPOS_CENTERED,
         image.*.w,
