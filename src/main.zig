@@ -13,49 +13,46 @@ const FitMode = enum {
 };
 
 fn fit_rect(fit_mode: FitMode, window_width: i32, window_height: i32, image_width: i32, image_height: i32) sdl.SDL_Rect {
-    if (fit_mode == FitMode.Stretch) {
-        return sdl.SDL_Rect{ .x = 0, .y = 0, .w = window_width, .h = window_height };
+    switch (fit_mode) {
+        FitMode.Stretch,  => {
+            return sdl.SDL_Rect{ .x = 0, .y = 0, .w = window_width, .h = window_height };
+        },
+        FitMode.FitIn, FitMode.FitOut => {
+            const win_width = @intToFloat(f64, window_width);
+            const win_height = @intToFloat(f64, window_height);
+
+            const img_width = @intToFloat(f64, image_width);
+            const img_height = @intToFloat(f64, image_height);
+            const img_ratio = img_width / img_height;
+
+            const img_width_to_fit_window_height = @floatToInt(i32, win_height * img_ratio);
+            const img_height_to_fit_window_width = @floatToInt(i32, win_width / img_ratio);
+
+            var is_image_anchor_image_to_window_width_otherwise_window_height = img_height_to_fit_window_width <= window_height;
+
+            if (fit_mode == FitMode.FitOut) {
+                is_image_anchor_image_to_window_width_otherwise_window_height =
+                    !is_image_anchor_image_to_window_width_otherwise_window_height;
+            }
+
+            const fit_width: i32 = if (is_image_anchor_image_to_window_width_otherwise_window_height)
+                window_width
+            else
+                img_width_to_fit_window_height;
+
+            const fit_height: i32 = if (is_image_anchor_image_to_window_width_otherwise_window_height)
+                img_height_to_fit_window_width
+            else
+                window_height;
+
+            return sdl.SDL_Rect{
+                .x = @divTrunc((window_width - fit_width), 2),
+                .y = @divTrunc((window_height - fit_height), 2),
+                .w = fit_width,
+                .h = fit_height,
+            };
+        }
     }
-
-    const window_width_as_float = @intToFloat(f64, window_width);
-    const window_height_as_float = @intToFloat(f64, window_height);
-
-    const image_width_as_float = @intToFloat(f64, image_width);
-    const image_height_as_float = @intToFloat(f64, image_height);
-
-    const width_ratio = window_width_as_float / image_width_as_float;
-    const height_ratio = window_height_as_float / image_height_as_float;
-
-    const fit_out_width = @floatToInt(i32, window_width_as_float * height_ratio);
-    const fit_out_height = @floatToInt(i32, image_height_as_float * width_ratio);
-
-    if (fit_mode == FitMode.FitOut) {
-        return sdl.SDL_Rect{
-            .x = @divTrunc((window_width  - fit_out_width), 2),
-            .y = @divTrunc((window_height - fit_out_height), 2),
-            .w = fit_out_width,
-            .h = fit_out_height,
-        };
-    }
-
-    assert(fit_mode == FitMode.FitIn);
-
-    const fit_in_width = if (window_width >= fit_out_width)
-        fit_out_width
-    else
-        window_width;
-
-    const fit_in_heigth = if (window_width >= fit_out_width)
-        window_height
-    else
-        fit_out_height;
-
-    return sdl.SDL_Rect{
-        .x = @divTrunc((window_width  - fit_in_width), 2),
-        .y = @divTrunc((window_height - fit_in_heigth), 2),
-        .w = fit_in_width,
-        .h = fit_in_heigth,
-    };
 }
 
 pub fn main() anyerror!void {
