@@ -91,6 +91,11 @@ pub fn main() anyerror!void {
     }
     defer sdl.SDL_FreeSurface(image);
 
+    // other configurations
+    assert(1 == sdl.SDL_SetHint(sdl.SDL_HINT_RENDER_SCALE_QUALITY, "best"));
+    assert(1 == sdl.SDL_SetHint(sdl.SDL_HINT_RENDER_VSYNC, "1"));
+    assert(1 == sdl.SDL_SetHint(sdl.SDL_HINT_VIDEO_ALLOW_SCREENSAVER, "1"));
+
     const window = sdl.SDL_CreateWindow(
         "Image Viewer",
         sdl.SDL_WINDOWPOS_CENTERED,
@@ -99,8 +104,6 @@ pub fn main() anyerror!void {
         image.*.h,
         sdl.SDL_WINDOW_RESIZABLE);
     defer sdl.SDL_DestroyWindow(window);
-
-    assert(1 == sdl.SDL_SetHint(sdl.SDL_HINT_RENDER_SCALE_QUALITY, "best"));
 
     const renderer_flags = sdl.SDL_RENDERER_ACCELERATED | sdl.SDL_RENDERER_PRESENTVSYNC;
     const renderer = sdl.SDL_CreateRenderer(window, -1, renderer_flags);
