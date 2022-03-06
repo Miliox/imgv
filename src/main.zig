@@ -6,15 +6,11 @@ const sdl = @cImport({
 
 const assert = std.debug.assert;
 
-const FitMode = enum {
-    FitIn,
-    FitOut,
-    Stretch
-};
+const FitMode = enum { FitIn, FitOut, Stretch };
 
 fn fit_rect(fit_mode: FitMode, window_width: i32, window_height: i32, image_width: i32, image_height: i32) sdl.SDL_Rect {
     switch (fit_mode) {
-        FitMode.Stretch,  => {
+        FitMode.Stretch => {
             return sdl.SDL_Rect{ .x = 0, .y = 0, .w = window_width, .h = window_height };
         },
         FitMode.FitIn, FitMode.FitOut => {
@@ -51,7 +47,7 @@ fn fit_rect(fit_mode: FitMode, window_width: i32, window_height: i32, image_widt
                 .w = fit_width,
                 .h = fit_height,
             };
-        }
+        },
     }
 }
 
@@ -103,13 +99,7 @@ pub fn main() anyerror!void {
     assert(1 == sdl.SDL_SetHint(sdl.SDL_HINT_RENDER_VSYNC, "1"));
     assert(1 == sdl.SDL_SetHint(sdl.SDL_HINT_VIDEO_ALLOW_SCREENSAVER, "1"));
 
-    const window = sdl.SDL_CreateWindow(
-        filename,
-        sdl.SDL_WINDOWPOS_CENTERED,
-        sdl.SDL_WINDOWPOS_CENTERED,
-        image.*.w,
-        image.*.h,
-        sdl.SDL_WINDOW_RESIZABLE);
+    const window = sdl.SDL_CreateWindow(filename, sdl.SDL_WINDOWPOS_CENTERED, sdl.SDL_WINDOWPOS_CENTERED, image.*.w, image.*.h, sdl.SDL_WINDOW_RESIZABLE);
     defer sdl.SDL_DestroyWindow(window);
 
     const renderer_flags = sdl.SDL_RENDERER_ACCELERATED | sdl.SDL_RENDERER_PRESENTVSYNC;
@@ -130,9 +120,7 @@ pub fn main() anyerror!void {
                 sdl.SDL_QUIT => break :mainloop,
                 sdl.SDL_WINDOWEVENT => {
                     switch (event.window.event) {
-                        sdl.SDL_WINDOWEVENT_RESIZED,
-                        sdl.SDL_WINDOWEVENT_SIZE_CHANGED,
-                        sdl.SDL_WINDOWEVENT_EXPOSED => {
+                        sdl.SDL_WINDOWEVENT_RESIZED, sdl.SDL_WINDOWEVENT_SIZE_CHANGED, sdl.SDL_WINDOWEVENT_EXPOSED => {
                             redraw = true;
                         },
                         else => {},
@@ -152,7 +140,7 @@ pub fn main() anyerror!void {
                             fit_mode = FitMode.Stretch;
                             redraw = true;
                         },
-                        else => {}
+                        else => {},
                     }
                 },
                 else => {},
