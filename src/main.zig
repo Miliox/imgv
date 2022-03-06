@@ -18,15 +18,18 @@ fn fit_in_rect(window_width: i32, window_height: i32, image_width: i32, image_he
     const width_ratio = window_width_as_float / image_width_as_float;
     const height_ratio = window_height_as_float / image_height_as_float;
 
-    const rect_width = if (window_aspect_ratio >= image_aspect_ratio)
-        @floatToInt(i32, window_width_as_float * height_ratio)
+    const fit_out_image_width = @floatToInt(i32, window_width_as_float * height_ratio);
+    const fit_out_image_height = @floatToInt(i32, image_height_as_float * width_ratio);
+
+    const rect_width = if (window_width >= fit_out_image_width)
+        fit_out_image_width
     else
         window_width;
 
     const rect_heigth = if (window_aspect_ratio >= image_aspect_ratio)
         window_height
     else
-        @floatToInt(i32, image_height_as_float * width_ratio);
+        fit_out_image_height;
 
     return sdl.SDL_Rect{
         .x = @divTrunc((window_width  - rect_width), 2),
