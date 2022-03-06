@@ -6,36 +6,55 @@ const sdl = @cImport({
 
 const assert = std.debug.assert;
 
-fn fit_in_rect(window_width: i32, window_height: i32, image_width: i32, image_height: i32) sdl.SDL_Rect {
+const FitMode = enum {
+    FitIn,
+    FitOut,
+    Stretch
+};
+
+fn fit_rect(fit_mode: FitMode, window_width: i32, window_height: i32, image_width: i32, image_height: i32) sdl.SDL_Rect {
+    if (fit_mode == FitMode.Stretch) {
+        return sdl.SDL_Rect{ .x = 0, .y = 0, .w = window_width, .h = window_height };
+    }
+
     const window_width_as_float = @intToFloat(f64, window_width);
     const window_height_as_float = @intToFloat(f64, window_height);
-    const window_aspect_ratio = window_width_as_float / window_height_as_float;
 
     const image_width_as_float = @intToFloat(f64, image_width);
     const image_height_as_float = @intToFloat(f64, image_height);
-    const image_aspect_ratio = image_width_as_float / image_height_as_float;
 
     const width_ratio = window_width_as_float / image_width_as_float;
     const height_ratio = window_height_as_float / image_height_as_float;
 
-    const fit_out_image_width = @floatToInt(i32, window_width_as_float * height_ratio);
-    const fit_out_image_height = @floatToInt(i32, image_height_as_float * width_ratio);
+    const fit_out_width = @floatToInt(i32, window_width_as_float * height_ratio);
+    const fit_out_height = @floatToInt(i32, image_height_as_float * width_ratio);
 
-    const rect_width = if (window_width >= fit_out_image_width)
-        fit_out_image_width
+    if (fit_mode == FitMode.FitOut) {
+        return sdl.SDL_Rect{
+            .x = @divTrunc((window_width  - fit_out_width), 2),
+            .y = @divTrunc((window_height - fit_out_height), 2),
+            .w = fit_out_width,
+            .h = fit_out_height,
+        };
+    }
+
+    assert(fit_mode == FitMode.FitIn);
+
+    const fit_in_width = if (window_width >= fit_out_width)
+        fit_out_width
     else
         window_width;
 
-    const rect_heigth = if (window_aspect_ratio >= image_aspect_ratio)
+    const fit_in_heigth = if (window_width >= fit_out_width)
         window_height
     else
-        fit_out_image_height;
+        fit_out_height;
 
     return sdl.SDL_Rect{
-        .x = @divTrunc((window_width  - rect_width), 2),
-        .y = @divTrunc((window_height - rect_heigth), 2),
-        .w = rect_width,
-        .h = rect_heigth,
+        .x = @divTrunc((window_width  - fit_in_width), 2),
+        .y = @divTrunc((window_height - fit_in_heigth), 2),
+        .w = fit_in_width,
+        .h = fit_in_heigth,
     };
 }
 
@@ -93,7 +112,8 @@ pub fn main() anyerror!void {
     const texture = sdl.SDL_CreateTextureFromSurface(renderer, image);
     defer sdl.SDL_DestroyTexture(texture);
 
-    var redraw: bool = true;
+    var redraw = true;
+    var fit_mode = FitMode.FitIn;
 
     // loop until window is close
     mainloop: while (true) {
@@ -112,6 +132,23 @@ pub fn main() anyerror!void {
                         else => {},
                     }
                 },
+                sdl.SDL_KEYDOWN => {
+                    switch (event.key.keysym.sym) {
+                        sdl.SDLK_i => {
+                            fit_mode = FitMode.FitIn;
+                            redraw = true;
+                        },
+                        sdl.SDLK_o => {
+                            fit_mode = FitMode.FitOut;
+                            redraw = true;
+                        },
+                        sdl.SDLK_s => {
+                            fit_mode = FitMode.Stretch;
+                            redraw = true;
+                        },
+                        else => {}
+                    }
+                },
                 else => {},
             }
         }
@@ -121,7 +158,7 @@ pub fn main() anyerror!void {
             var window_height: c_int = 0;
             sdl.SDL_GetWindowSize(window, &window_width, &window_height);
 
-            const dst_rect = fit_in_rect(window_width, window_height, image.*.w, image.*.h);
+            const dst_rect = fit_rect(fit_mode, window_width, window_height, image.*.w, image.*.h);
 
             assert(0 == sdl.SDL_RenderClear(renderer));
             assert(0 == sdl.SDL_RenderCopy(renderer, texture, null, &dst_rect));
