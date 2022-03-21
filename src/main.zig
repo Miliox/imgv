@@ -2,6 +2,7 @@ const std = @import("std");
 const sdl = @cImport({
     @cInclude("SDL.h");
     @cInclude("SDL_image.h");
+    @cInclude("SDL_syswm.h");
 });
 
 const assert = std.debug.assert;
@@ -108,6 +109,21 @@ pub fn main() anyerror!void {
 
     const texture = sdl.SDL_CreateTextureFromSurface(renderer, image);
     defer sdl.SDL_DestroyTexture(texture);
+
+    var info = sdl.SDL_SysWMinfo{
+        .version = sdl.SDL_version{
+            .major = sdl.SDL_MAJOR_VERSION,
+            .minor = sdl.SDL_MINOR_VERSION,
+            .patch = sdl.SDL_PATCHLEVEL },
+        .subsystem = 0,
+        .info = .{ .cocoa = .{.window = null} }
+    };
+
+    // Retrieve NSWindow
+    assert(1 == sdl.SDL_GetWindowWMInfo(window,&info));
+    assert(sdl.SDL_SYSWM_COCOA == info.subsystem);
+    std.log.info("SDL_GetWindowWMInfo: version:{}.{}.{}, window:{}",
+        .{info.version.major, info.version.minor, info.version.patch, info.info.cocoa.window });
 
     var redraw = true;
     var fit_mode = FitMode.FitIn;
