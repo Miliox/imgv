@@ -81,7 +81,7 @@ pub fn main() anyerror!void {
         return;
     }
 
-    const image = sdl.IMG_Load(args[1]);
+    const image = sdl.IMG_Load(@ptrCast([*c]u8, args[1]));
     if (image == null) {
         std.log.err("IMG_Load failed: {s}", .{sdl.IMG_GetError()});
         return;
@@ -100,7 +100,7 @@ pub fn main() anyerror!void {
     assert(1 == sdl.SDL_SetHint(sdl.SDL_HINT_RENDER_VSYNC, "1"));
     assert(1 == sdl.SDL_SetHint(sdl.SDL_HINT_VIDEO_ALLOW_SCREENSAVER, "1"));
 
-    const window = sdl.SDL_CreateWindow(filename, sdl.SDL_WINDOWPOS_CENTERED, sdl.SDL_WINDOWPOS_CENTERED, image.*.w, image.*.h, sdl.SDL_WINDOW_RESIZABLE);
+    const window = sdl.SDL_CreateWindow(@ptrCast([*c]u8, filename), sdl.SDL_WINDOWPOS_CENTERED, sdl.SDL_WINDOWPOS_CENTERED, image.*.w, image.*.h, sdl.SDL_WINDOW_RESIZABLE);
     defer sdl.SDL_DestroyWindow(window);
 
     const renderer_flags = sdl.SDL_RENDERER_ACCELERATED | sdl.SDL_RENDERER_PRESENTVSYNC;
@@ -110,20 +110,12 @@ pub fn main() anyerror!void {
     const texture = sdl.SDL_CreateTextureFromSurface(renderer, image);
     defer sdl.SDL_DestroyTexture(texture);
 
-    var info = sdl.SDL_SysWMinfo{
-        .version = sdl.SDL_version{
-            .major = sdl.SDL_MAJOR_VERSION,
-            .minor = sdl.SDL_MINOR_VERSION,
-            .patch = sdl.SDL_PATCHLEVEL },
-        .subsystem = 0,
-        .info = .{ .cocoa = .{.window = null} }
-    };
+    var info = sdl.SDL_SysWMinfo{ .version = sdl.SDL_version{ .major = sdl.SDL_MAJOR_VERSION, .minor = sdl.SDL_MINOR_VERSION, .patch = sdl.SDL_PATCHLEVEL }, .subsystem = 0, .info = .{ .cocoa = .{ .window = null } } };
 
     // Retrieve NSWindow
-    assert(1 == sdl.SDL_GetWindowWMInfo(window,&info));
+    assert(1 == sdl.SDL_GetWindowWMInfo(window, &info));
     assert(sdl.SDL_SYSWM_COCOA == info.subsystem);
-    std.log.info("SDL_GetWindowWMInfo: version:{}.{}.{}, window:{}",
-        .{info.version.major, info.version.minor, info.version.patch, info.info.cocoa.window });
+    std.log.info("SDL_GetWindowWMInfo: version:{?}.{?}.{?}, window:{?}", .{ info.version.major, info.version.minor, info.version.patch, info.info.cocoa.window });
 
     var redraw = true;
     var fit_mode = FitMode.FitIn;
